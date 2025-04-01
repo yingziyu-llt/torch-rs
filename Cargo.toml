@@ -1,0 +1,11 @@
+[package]
+name = "torch-rs"
+version = "0.0.1"
+edition = "2024"
+authors = ["Lin Letian <yingziyu-Lin@outlook.com>"]
+description = "PyTorch-like deep learning framework in Rust"
+license = "MIT OR Apache-2.0"
+
+
+[dependencies]
+ndarray = "0.16.1"
