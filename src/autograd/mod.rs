@@ -1,55 +1,47 @@
-// src/autograd/mod.rs
-pub mod op; // 声明子模块
-use ndarray::ArrayD;
-pub use op::{AddOp, Op}; // 导出需要公开的类型
-
 use super::tensor::Tensor;
-use std::sync::Arc;
-
-pub fn add(a: &Arc<Tensor>, b: &Arc<Tensor>) -> Tensor {
-    let op = Arc::new(AddOp);
-    let mut result = op.forward(&[a, b]);
-
-    // 记录计算图关系
-    result.add_parent(a);
-    result.add_parent(b);
-    result.set_creator(op.clone());
-
-    result
-}
+use ndarray::ArrayD;
+use std::{collections::HashSet, rc::Rc};
 
 impl Tensor {
-    pub fn backward(&mut self) {
-        if !self.requires_grad {
-            return;
-        }
-        *self.grad.write().unwrap() = Some(ArrayD::ones(self.data.shape()));
-
+    /// Backward propagation for the computational graph.
+    pub fn backward(&self) {
         let mut grads = vec![self.clone()];
-        let mut visited = std::collections::HashSet::new();
+        let mut visited = HashSet::new();
+
+        {
+            let mut grad = self.0.borrow_mut();
+            grad.grad = Some(ArrayD::ones(grad.data.shape()));
+            println!("Tensor grad: {:?}", grad.grad);
+        }
+
+        // println!("Backward propagation started");
+        // println!("{:?}", self);
 
         while let Some(tensor) = grads.pop() {
-            if visited.contains(&Arc::as_ptr(&tensor.data)) {
+            let tensor_ptr = Rc::as_ptr(&tensor.0);
+
+            if visited.contains(&tensor_ptr) {
                 continue;
             }
-            visited.insert(Arc::as_ptr(&tensor.data));
+            visited.insert(tensor_ptr);
 
-            if let Some(ref creator) = tensor.creator {
-                creator.backward((*tensor.data).clone());
+            if let Some(ref creator) = tensor.0.borrow().creator {
+                let child_grads = creator.backward(&tensor);
 
-                for parent in &tensor.parents {
-                    if let Some(parent) = parent.upgrade() {
-                        {
-                            println!("parents{:?}", parent.grad.read().unwrap());
-                            let mut parent_grad = parent.grad.write().unwrap();
-                            if let Some(ref mut parent_grad) = *parent_grad {
-                                *parent_grad += tensor.grad.read().unwrap().as_ref().unwrap();
-                            } else {
-                                *parent_grad =
-                                    Some(tensor.grad.read().unwrap().as_ref().unwrap().clone());
+                for (parent_weak, child_grad) in tensor.0.borrow().parents.iter().zip(child_grads) {
+                    if let Some(parent) = parent_weak.upgrade() {
+                        let mut parent_data = parent.borrow_mut();
+
+                        match parent_data.grad {
+                            Some(ref mut parent_grad) => {
+                                *parent_grad += &child_grad;
+                            }
+                            None => {
+                                parent_data.grad = Some(child_grad);
                             }
                         }
-                        grads.push((*parent).clone());
+
+                        grads.push(Tensor(parent_weak.upgrade().unwrap()));
                     }
                 }
             }
