@@ -137,4 +137,16 @@ mod tests {
         assert_eq!(batch_tensor.0.borrow().grad.clone().unwrap(), batch_expected_grad);
         assert_eq!(single_tensor.0.borrow().grad.clone().unwrap(), single_expected_grad);
     }
+
+    #[test]
+    fn test_tensor_add_broadcasting() {
+        // 测试广播机制
+        let a = Tensor::new(array![[1.0, 2.0], [3.0, 4.0]].into_dyn());
+        let b = Tensor::new(array![5.0, 6.0].into_dyn()); // 1D 张量
+
+        let result = &a + &b; // b 应该被广播到 a 的形状
+
+        let expected = array![[6.0, 8.0], [8.0, 10.0]].into_dyn();
+        assert_eq!(result.0.borrow().data, expected);
+    }
 }

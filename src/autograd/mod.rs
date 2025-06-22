@@ -11,7 +11,6 @@ impl Tensor {
         {
             let mut grad = self.0.borrow_mut();
             grad.grad = Some(ArrayD::ones(grad.data.shape()));
-            println!("Tensor grad: {:?}", grad.grad);
         }
 
         // println!("Backward propagation started");
@@ -27,10 +26,10 @@ impl Tensor {
 
             if let Some(ref creator) = tensor.0.borrow().creator {
                 let child_grads = creator.backward(&tensor);
-
                 for (parent_weak, child_grad) in tensor.0.borrow().parents.iter().zip(child_grads) {
                     if let Some(parent) = parent_weak.upgrade() {
                         let mut parent_data = parent.borrow_mut();
+                        println!("backward: {:?} -> {:?}",tensor,parent_data);
 
                         match parent_data.grad {
                             Some(ref mut parent_grad) => {

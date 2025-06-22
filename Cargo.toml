@@ -8,6 +8,7 @@ license = "MIT OR Apache-2.0"
 
 
 [dependencies]
-rand_distr = "0.4.3"    # 使用明确的版本号
-ndarray-rand = "0.14.0"
-ndarray = "0.15.6"
+rand_distr = "0.5"    # 使用明确的版本号
+ndarray-rand = "0.15"
+ndarray = "0.16"
+ndarray-einsum = "0.8.0"

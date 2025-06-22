@@ -1,5 +1,7 @@
 pub mod add;
 pub mod matmul;
+pub mod mul;
+pub mod mean;
 use crate::tensor::Tensor;
 use ndarray::ArrayD;
 use std::fmt::Debug;

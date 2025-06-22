@@ -7,11 +7,15 @@ pub struct SGD {
     pub lr: f32,
 }
 
-impl Optimizer for SGD {
-    fn new(params: Vec<Tensor>, lr: f32) -> Self {
-        Self { params, lr }
+impl SGD {
+    pub fn new(params: Vec<Tensor>, lr: f32) -> Self {
+        println!("Using SGD optimizer with learning rate: {}", lr);
+        println!("Parameters: {:?}", params);
+        SGD { params, lr }
     }
-    
+}
+
+impl Optimizer for SGD {    
     fn step(&mut self) {
         for param in &mut self.params {
             let grad = param.0.borrow().grad.clone().expect("Gradient not found");

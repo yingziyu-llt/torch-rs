@@ -10,12 +10,11 @@ pub struct Linear {
     pub out_features: usize,
     pub training: bool,
 }
-
-impl Module for Linear {
-    fn new(in_features: usize, out_features: usize) -> Self {
-        let w = Tensor::randn(&[out_features, in_features]);
-        let b = Tensor::zeros(&[out_features]);
-        Self {
+impl Linear {
+    pub fn new(in_features: usize, out_features: usize) -> Self {
+        let w = Tensor::randn(vec![in_features, out_features].as_slice()).requires_grad(true);
+        let b = Tensor::zeros(vec![out_features].as_slice()).requires_grad(true);
+        Linear {
             w,
             b,
             in_features,
@@ -23,8 +22,11 @@ impl Module for Linear {
             training: true,
         }
     }
+}
+
+impl Module for Linear {
     fn forward(&self, x: &Tensor) -> Tensor {
-        &matmul(&self.w,x) + &self.b
+        matmul(x,&self.w)
     }
     fn parameters(&self) -> Vec<Tensor> {
         vec![self.w.clone(), self.b.clone()]

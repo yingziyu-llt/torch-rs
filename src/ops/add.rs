@@ -81,11 +81,11 @@ impl Op for AddOp {
 
             // 添加需要梯度的父节点
             if inputs[0].0.borrow().requires_grad {
-                output_data.add_parent(inputs[0]);
+            output_data.add_parent(inputs[0]);
             }
             
             if inputs[1].0.borrow().requires_grad {
-                output_data.add_parent(inputs[1]);
+            output_data.add_parent(inputs[1]);
             }
             
             // 如果任一输入需要梯度，则输出也需要梯度
@@ -99,42 +99,31 @@ impl Op for AddOp {
     fn backward(&self, parent: &Tensor) -> Vec<ArrayD<f32>> {
         let grad = parent.0.borrow().grad.as_ref().expect("Gradient should not be None").clone();
         let mut grads = Vec::with_capacity(2);
-        
         // 对于每个输入形状，处理梯度的反向广播
         for shape in &self.input_shapes {
             let mut result = grad.clone();
-            let grad_shape = grad.shape();
-            
-            // 1. 处理维度数不同的情况
-            if shape.len() < grad_shape.len() {
-                // 对多余的维度进行求和
-                for _ in 0..(grad_shape.len() - shape.len()) {
-                    result = result.sum_axis(Axis(0));
-                }
+            // 先对多余的维度 sum
+            while result.ndim() > shape.len() {
+                result = result.sum_axis(Axis(0));
             }
-            
-            // 2. 处理需要在某些维度上求和的情况（反向广播）
+            // 再对 shape=1 的维度 sum，倒序处理 axis
+            let result_shape: Vec<usize> = result.shape().to_vec();
             let mut sum_axes = Vec::new();
-            for (i, (&s, &g)) in shape.iter().zip(result.shape().iter()).enumerate() {
+            for (i, (&s, &g)) in shape.iter().zip(result_shape.iter()).enumerate() {
                 if s == 1 && g > 1 {
                     sum_axes.push(i);
                 }
             }
-            
-            // 从大到小排序轴，以避免求和后索引变化
             sum_axes.sort_unstable_by(|a, b| b.cmp(a));
             for axis in sum_axes {
                 result = result.sum_axis(Axis(axis));
             }
-            
             // 确保形状完全匹配
             if result.shape() != shape.as_slice() {
                 result = result.into_shape(IxDyn(shape)).unwrap();
             }
-            
             grads.push(result);
         }
-        
         grads
     }
 }

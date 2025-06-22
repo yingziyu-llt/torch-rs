@@ -1,7 +1,7 @@
 use crate::ops::Op;
 use ndarray::{Array, ArrayD, Axis, IxDyn};
 use ndarray_rand::RandomExt;
-use rand_distr::StandardNormal;
+use ndarray_rand::rand_distr::StandardNormal;
 use std::cell::RefCell;
 use std::fmt::{self, Debug};
 use std::rc::{Rc, Weak};
@@ -30,6 +30,20 @@ impl Debug for TensorData {
         // 显示梯度状态
         if self.requires_grad {
             write!(f, ", requires_grad=true")?;
+        }
+
+        // 显示梯度信息
+        if let Some(ref grad) = self.grad {
+            write!(f, ", grad={:?}", grad)?;
+        } else {
+            write!(f, ", grad=None")?;
+        }
+
+        // 显示创建者信息
+        if let Some(ref creator) = self.creator {
+            write!(f, ", creator={:?}", creator)?;
+        } else {
+            write!(f, ", creator=None")?;
         }
         
         write!(f, ")")
@@ -268,5 +282,21 @@ impl Tensor {
             .map_err(|_| "重塑失败")?;
             
         Ok(Tensor::new(reshaped))
+    }
+}
+
+impl From<ArrayD<f32>> for Tensor {
+    fn from(data: ArrayD<f32>) -> Self {
+        Tensor::new(data)
+    }
+}
+impl From<Vec<f32>> for Tensor {
+    fn from(data: Vec<f32>) -> Self {
+        Tensor::new(ArrayD::from_shape_vec(IxDyn(&[data.len()]), data).unwrap())
+    }
+}
+impl From<&[f32]> for Tensor {
+    fn from(data: &[f32]) -> Self {
+        Tensor::new(ArrayD::from_shape_vec(IxDyn(&[data.len()]), data.to_vec()).unwrap())
     }
 }
