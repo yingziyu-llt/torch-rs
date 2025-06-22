@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::ops::Op;
 use crate::tensor::Tensor;
 
@@ -12,8 +14,13 @@ impl Op for ReLU {
     fn forward(&self, inputs: &[&Tensor]) -> Tensor {
         assert!(inputs.len() == 1, "ReLU expects exactly one input tensor");
         let input = inputs[0];
-        Tensor::new(input.0.borrow().data.mapv(|x| x.max(0.0)).into_dyn())
-            .requires_grad(input.0.borrow().requires_grad)
+        let res = Tensor::new(input.0.borrow().data.mapv(|x| x.max(0.0)).into_dyn())
+            .require_grad(input.0.borrow().requires_grad);
+        let op = ReLU::new();
+        res.0.borrow_mut().set_creator(Rc::new(op));
+        res.0.borrow_mut().add_parent(input);
+        res
+
     }
 
     fn backward(&self, parent: &Tensor) -> Vec<ndarray::ArrayD<f32>> {

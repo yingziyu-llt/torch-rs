@@ -12,8 +12,8 @@ fn test_tensor_matmul_2d() {
 }
 #[test]
 fn test_tensor_matmul_2d_grad() {
-    let a = Tensor::new(array![[1.0, 2.0], [3.0, 4.0]].into_dyn()).requires_grad(true);
-    let b = Tensor::new(array![[5.0, 6.0], [7.0, 8.0]].into_dyn()).requires_grad(true);
+    let a = Tensor::new(array![[1.0, 2.0], [3.0, 4.0]].into_dyn()).require_grad(true);
+    let b = Tensor::new(array![[5.0, 6.0], [7.0, 8.0]].into_dyn()).require_grad(true);
     let result = matmul(&a, &b);
     result.backward();
     // grad_a = grad_output @ b.T = [[1,1],[1,1]] @ [[5,7],[6,8]] = [[11,15],[11,15]]
@@ -51,8 +51,8 @@ fn test_tensor_3d_matmul() {
 fn test_tensor_3d_matmul_grad() {
     // a: [batch, channel, input] -> [1, 2, 2]
     // b: [input, output] -> [2, 2]
-    let a = Tensor::new(array![[[1.0, 2.0], [3.0, 4.0]]].into_dyn()).requires_grad(true);
-    let b = Tensor::new(array![[5.0, 6.0], [7.0, 8.0]].into_dyn()).requires_grad(true);
+    let a = Tensor::new(array![[[1.0, 2.0], [3.0, 4.0]]].into_dyn()).require_grad(true);
+    let b = Tensor::new(array![[5.0, 6.0], [7.0, 8.0]].into_dyn()).require_grad(true);
     let result = matmul(&a, &b);
     result.backward();
 
@@ -67,9 +67,9 @@ fn test_tensor_3d_matmul_grad() {
 
 #[test]
 fn test_vectors_matmul() {
-    let a = Tensor::new(array![[1.0,2.0,3.0],[1.0,2.0,3.0]].into_dyn()).requires_grad(true);
-    let b = Tensor::randn(&[3, 4]).requires_grad(true);
-    let c = Tensor::randn(&[2,4]).requires_grad(true);
+    let a = Tensor::new(array![[1.0,2.0,3.0],[1.0,2.0,3.0]].into_dyn()).require_grad(true);
+    let b = Tensor::randn(&[3, 4]).require_grad(true);
+    let c = Tensor::randn(&[2,4]).require_grad(true);
     let result = &matmul(&a, &b) + &c;
     // 预期结果: A:[1,3], B:[3,4]
     // Out:[1,4]

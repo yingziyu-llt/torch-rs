@@ -1,12 +1,14 @@
-// src/main.rs
 use ndarray::array;
 use torch_rs::nn::linear::Linear;
 use torch_rs::nn::Module;
 use torch_rs::optimizer::Optimizer;
 use torch_rs::optimizer::SGD::SGD;
 use torch_rs::tensor::Tensor;
-use torch_rs::F;
+use torch_rs::functional;
 
+/// 线性回归demo主程序。
+///
+/// 构造输入数据、目标数据，创建线性层和SGD优化器，训练100个epoch并输出损失和预测结果。
 fn main() {
     let a = Tensor::new(
         array![
@@ -19,7 +21,7 @@ fn main() {
         ]
         .into_dyn(),
     )
-    .requires_grad(true);
+    .require_grad(true);
     let b = Tensor::new(array![[2.0], [4.01], [5.99], [8.01], [10.005], [12.0]].into_dyn());
     let linear_layer = Linear::new(2, 1);
     let mut optimizer = SGD::new(linear_layer.parameters(), 0.01);
@@ -27,7 +29,7 @@ fn main() {
 
     for i in 0..100 {
         let output = linear_layer.forward(&a);
-        let loss = F::mse_loss(&output, &b);
+        let loss = functional::mse_loss(&output, &b);
         println!("Epoch {}: Loss = {:?}", i, loss);
         println!("Output: {:?}", output);
 

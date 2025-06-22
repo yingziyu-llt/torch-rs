@@ -1,6 +1,5 @@
 use crate::nn::Module;
 use crate::tensor::Tensor;
-use crate::F;
 
 #[derive(Debug)]
 pub struct Sequential {
@@ -18,15 +17,20 @@ impl Module for Sequential {
         let mut output = input.clone();
         for layer in &self.layers {
             output = layer.forward(&output);
+            println!("output after layer {:?}: {:?}", layer, output);
         }
         output
     }
 
     fn parameters(&self) -> Vec<Tensor> {
-        self.layers
-            .iter()
-            .flat_map(|layer| layer.parameters())
-            .collect()
+        let mut params = Vec::new();
+        for layer in &self.layers {
+            if layer.parameters().is_empty() {
+                continue;
+            }
+            params.extend(layer.parameters());
+        }
+        params
     }
 
     fn train(&mut self) {

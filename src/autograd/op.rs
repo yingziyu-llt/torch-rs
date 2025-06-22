@@ -3,14 +3,17 @@ use ndarray::ArrayD;
 use std::fmt::Debug;
 use std::sync::Arc;
 
+/// 自动微分操作trait。
+///
+/// 需实现前向传播和反向传播。
 pub trait Op: Send + Sync + Debug {
     /// 前向传播
     fn forward(&self, inputs: &[&Arc<Tensor>]) -> Tensor;
-
-    /// 反向传播（返回输入梯度）
+    /// 反向传播，返回每个输入的梯度
     fn backward(&self, grad: ArrayD<f32>) -> Vec<ArrayD<f32>>;
 }
 
+/// 加法操作
 #[derive(Debug)]
 pub struct AddOp;
 

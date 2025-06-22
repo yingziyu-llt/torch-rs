@@ -1,6 +1,5 @@
 use torch_rs::tensor::Tensor;
 use ndarray::{Array, IxDyn};
-use std::panic;
 
 #[test]
 fn test_tensor_creation() {
@@ -95,12 +94,12 @@ fn test_tensor_grad() {
     assert_eq!(tensor.is_leaf(), true); // 新创建的张量应该是叶节点
     
     // 测试设置 requires_grad
-    let tensor = tensor.requires_grad(true);
+    let tensor = tensor.require_grad(true);
     assert!(tensor.0.borrow().requires_grad);
     assert!(tensor.0.borrow().grad.is_some());
     
     // 测试取消 requires_grad
-    let tensor = tensor.requires_grad(false);
+    let tensor = tensor.require_grad(false);
     assert!(!tensor.0.borrow().requires_grad);
 }
 
@@ -151,7 +150,7 @@ fn test_tensor_index() {
 #[test]
 fn test_tensor_detach() {
     // 创建需要梯度的张量
-    let tensor = Tensor::ones(&[2, 3]).requires_grad(true);
+    let tensor = Tensor::ones(&[2, 3]).require_grad(true);
     
     // 验证初始状态
     assert!(tensor.0.borrow().requires_grad);
@@ -185,7 +184,7 @@ fn test_tensor_debug_format() {
     assert!(debug_str.contains("[...tensor of size 10×10]"));
     
     // 测试带梯度的格式
-    let tensor = Tensor::ones(&[2, 3]).requires_grad(true);
+    let tensor = Tensor::ones(&[2, 3]).require_grad(true);
     let debug_str = format!("{:?}", tensor);
     assert!(debug_str.contains("requires_grad=true"));
 }

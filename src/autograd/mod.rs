@@ -3,7 +3,9 @@ use ndarray::ArrayD;
 use std::{collections::HashSet, rc::Rc};
 
 impl Tensor {
-    /// 反向传播：从当前张量出发，递归地计算所有依赖张量的梯度
+    /// 反向传播：从当前张量出发，递归地计算所有依赖张量的梯度。
+    ///
+    /// 通常用于loss.backward()。
     pub fn backward(&self) {
         // 1. 初始化自身的梯度为全1（通常用于标量loss）
         {

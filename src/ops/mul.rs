@@ -2,7 +2,7 @@ use crate::ops::Op;
 use crate::tensor::Tensor;
 use ndarray::{ArrayD, Axis, IxDyn};
 use std::ops::Mul;
-use std::{process::Output, rc::Rc};
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct Multiply {

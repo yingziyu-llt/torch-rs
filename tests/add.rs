@@ -16,8 +16,8 @@ mod tests {
 
     #[test]
     fn test_tensor_add_grad() {
-        let a = Tensor::new(array![[1.0, 2.0], [3.0, 4.0]].into_dyn()).requires_grad(true);
-        let b = Tensor::new(array![[5.0, 6.0], [7.0, 8.0]].into_dyn()).requires_grad(true);
+        let a = Tensor::new(array![[1.0, 2.0], [3.0, 4.0]].into_dyn()).require_grad(true);
+        let b = Tensor::new(array![[5.0, 6.0], [7.0, 8.0]].into_dyn()).require_grad(true);
 
         let result = &a + &b;
         result.backward();
@@ -62,12 +62,12 @@ mod tests {
         let a = Tensor::new(array![
             [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]],
             [[7.0, 8.0, 9.0], [10.0, 11.0, 12.0]]
-        ].into_dyn()).requires_grad(true);
+        ].into_dyn()).require_grad(true);
         
         let b = Tensor::new(array![
             [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]],
             [[0.7, 0.8, 0.9], [1.0, 1.1, 1.2]]
-        ].into_dyn()).requires_grad(true);
+        ].into_dyn()).require_grad(true);
 
         // 执行加法操作
         let result = &a + &b;
@@ -117,9 +117,9 @@ mod tests {
         let batch_tensor = Tensor::new(array![
             [[1.0, 2.0], [3.0, 4.0]],
             [[5.0, 6.0], [7.0, 8.0]]
-        ].into_dyn()).requires_grad(true);
+        ].into_dyn()).require_grad(true);
         
-        let single_tensor = Tensor::new(array![[0.1, 0.2], [0.3, 0.4]].into_dyn()).requires_grad(true);
+        let single_tensor = Tensor::new(array![[0.1, 0.2], [0.3, 0.4]].into_dyn()).require_grad(true);
         
         // 执行加法
         let result = &batch_tensor + &single_tensor;

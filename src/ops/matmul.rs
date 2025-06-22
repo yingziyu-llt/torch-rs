@@ -1,7 +1,7 @@
 use super::Op;
 use crate::tensor::Tensor;
 use core::panic;
-use ndarray::{ArrayD, Axis, Ix2, Ix3, IxDyn};
+use ndarray::{ArrayD, Axis, Ix2};
 use ndarray_einsum::tensordot;
 use std::rc::Rc;
 

@@ -1,6 +1,6 @@
 use crate::nn::Module;
 use crate::tensor::Tensor;
-use crate::F;
+use crate::functional;
 
 #[derive(Debug)]
 pub struct ReLU;
@@ -11,7 +11,7 @@ impl ReLU {
 }
 impl Module for ReLU {
     fn forward(&self, input: &Tensor) -> Tensor {
-        F::relu(input)
+        functional::relu(input)
     }
 
     fn parameters(&self) -> Vec<Tensor> {

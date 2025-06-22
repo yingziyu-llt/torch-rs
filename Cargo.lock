@@ -372,6 +372,7 @@ dependencies = [
  "ndarray",
  "ndarray-einsum",
  "ndarray-rand",
+ "rand 0.9.1",
  "rand_distr 0.5.1",
 ]
 

@@ -12,3 +12,4 @@ rand_distr = "0.5"    # 使用明确的版本号
 ndarray-rand = "0.15"
 ndarray = "0.16"
 ndarray-einsum = "0.8.0"
+rand = "0.9.1"

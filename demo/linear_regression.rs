@@ -4,7 +4,7 @@ use torch_rs::nn::Module;
 use torch_rs::optimizer::Optimizer;
 use torch_rs::optimizer::SGD::SGD;
 use torch_rs::tensor::Tensor;
-use torch_rs::F;
+use torch_rs::functional;
 // 线性回归demo
 fn main() {
     let a = Tensor::new(
