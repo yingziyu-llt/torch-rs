@@ -8,9 +8,7 @@ impl Tensor {
         // 1. 初始化自身的梯度为全1（通常用于标量loss）
         {
             let mut self_data = self.0.borrow_mut();
-            if self_data.grad.is_none() {
-                self_data.grad = Some(ArrayD::ones(self_data.data.shape()));
-            }
+            self_data.grad = Some(ArrayD::ones(self_data.data.shape()));
         }
 
         // 2. 拓扑排序，确保每个节点在所有子节点之后被处理
