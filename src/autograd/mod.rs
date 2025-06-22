@@ -3,44 +3,51 @@ use ndarray::ArrayD;
 use std::{collections::HashSet, rc::Rc};
 
 impl Tensor {
-    /// Backward propagation for the computational graph.
+    /// 反向传播：从当前张量出发，递归地计算所有依赖张量的梯度
     pub fn backward(&self) {
-        let mut grads = vec![self.clone()];
-        let mut visited = HashSet::new();
-
+        // 1. 初始化自身的梯度为全1（通常用于标量loss）
         {
-            let mut grad = self.0.borrow_mut();
-            grad.grad = Some(ArrayD::ones(grad.data.shape()));
+            let mut self_data = self.0.borrow_mut();
+            if self_data.grad.is_none() {
+                self_data.grad = Some(ArrayD::ones(self_data.data.shape()));
+            }
         }
 
-        // println!("Backward propagation started");
-        // println!("{:?}", self);
-
-        while let Some(tensor) = grads.pop() {
-            let tensor_ptr = Rc::as_ptr(&tensor.0);
-
-            if visited.contains(&tensor_ptr) {
-                continue;
+        // 2. 拓扑排序，确保每个节点在所有子节点之后被处理
+        fn topo_sort(tensor: &Tensor, visited: &mut HashSet<*const ()>, order: &mut Vec<Tensor>) {
+            let ptr = Rc::as_ptr(&tensor.0) as *const ();
+            if visited.contains(&ptr) {
+                return;
             }
-            visited.insert(tensor_ptr);
+            visited.insert(ptr);
+            let parents = tensor.0.borrow().parents.clone();
+            for parent_weak in parents {
+                let parent_rc = parent_weak.clone();
+                topo_sort(&Tensor(parent_rc), visited, order);
+            }
+            order.push(tensor.clone());
+        }
 
-            if let Some(ref creator) = tensor.0.borrow().creator {
-                let child_grads = creator.backward(&tensor);
-                for (parent_weak, child_grad) in tensor.0.borrow().parents.iter().zip(child_grads) {
-                    if let Some(parent) = parent_weak.upgrade() {
-                        let mut parent_data = parent.borrow_mut();
-                        println!("backward: {:?} -> {:?}",tensor,parent_data);
+        let mut visited = HashSet::new();
+        let mut topo_order = Vec::new();
+        topo_sort(self, &mut visited, &mut topo_order);
 
-                        match parent_data.grad {
-                            Some(ref mut parent_grad) => {
-                                *parent_grad += &child_grad;
-                            }
-                            None => {
-                                parent_data.grad = Some(child_grad);
-                            }
+        // 3. 反向遍历拓扑序，执行梯度传播
+        for tensor in topo_order.into_iter().rev() {
+            let creator = tensor.0.borrow().creator.clone();
+            if let Some(op) = creator {
+                let grads = op.backward(&tensor);
+                let parents = tensor.0.borrow().parents.clone();
+                for (parent_weak, grad) in parents.into_iter().zip(grads.into_iter()) {
+                    let parent_rc = parent_weak.clone();
+                    let mut parent_data = parent_rc.borrow_mut();
+                    match &mut parent_data.grad {
+                        Some(parent_grad) => {
+                            *parent_grad += &grad;
                         }
-
-                        grads.push(Tensor(parent_weak.upgrade().unwrap()));
+                        None => {
+                            parent_data.grad = Some(grad);
+                        }
                     }
                 }
             }

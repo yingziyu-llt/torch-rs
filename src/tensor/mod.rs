@@ -4,7 +4,7 @@ use ndarray_rand::RandomExt;
 use ndarray_rand::rand_distr::StandardNormal;
 use std::cell::RefCell;
 use std::fmt::{self, Debug};
-use std::rc::{Rc, Weak};
+use std::rc::{Rc};
 
 #[derive(Clone)]
 pub struct TensorData {
@@ -12,7 +12,7 @@ pub struct TensorData {
     pub grad: Option<ArrayD<f32>>,  // 梯度
     pub requires_grad: bool,
     pub creator: Option<Rc<dyn Op>>,             // 创建该张量的操作
-    pub parents: Vec<Weak<RefCell<TensorData>>>, // 父节点
+    pub parents: Vec<Rc<RefCell<TensorData>>>, // 父节点
 }
 
 // 实现Debug trait以便于调试输出
@@ -74,7 +74,7 @@ impl TensorData {
     }
 
     pub fn add_parent(&mut self, parent: &Tensor) {
-        self.parents.push(Rc::downgrade(&parent.0));
+        self.parents.push(Rc::clone(&parent.0));
     }
 }
 

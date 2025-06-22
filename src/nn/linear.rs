@@ -26,7 +26,8 @@ impl Linear {
 
 impl Module for Linear {
     fn forward(&self, x: &Tensor) -> Tensor {
-        matmul(x,&self.w)
+        let mid = matmul(x, &self.w);
+        &mid + &self.b
     }
     fn parameters(&self) -> Vec<Tensor> {
         vec![self.w.clone(), self.b.clone()]
