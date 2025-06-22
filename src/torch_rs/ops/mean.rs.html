@@ -1,0 +1,91 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/ops/mean.rs`."><title>mean.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-916cea96.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="torch_rs" data-themes="" data-resource-suffix="" data-rustdoc-version="1.87.0 (17067e9ac 2025-05-09)" data-channel="1.87.0" data-search-js="search-e7298875.js" data-settings-js="settings-d72f25bb.js" ><script src="../../../static.files/storage-82c7156e.js"></script><script defer src="../../../static.files/src-script-63605ae7.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-fb8c74a8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">torch_rs/ops/</div>mean.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-2"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">super</span>::Op;
+<a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span><span class="kw">crate</span>::tensor::Tensor;
+<a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>ndarray::{Array, ArrayD, IxDyn};
+<a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>std::rc::Rc;
+<a href=#5 id=5 data-nosnippet>5</a>
+<a href=#6 id=6 data-nosnippet>6</a><span class="attr">#[derive(Debug)]
+<a href=#7 id=7 data-nosnippet>7</a></span><span class="kw">pub struct </span>Mean {
+<a href=#8 id=8 data-nosnippet>8</a>    <span class="doccomment">/// The shape of the input tensor, saved for the backward pass.
+<a href=#9 id=9 data-nosnippet>9</a>    </span>input_shape: Vec&lt;usize&gt;,
+<a href=#10 id=10 data-nosnippet>10</a>}
+<a href=#11 id=11 data-nosnippet>11</a>
+<a href=#12 id=12 data-nosnippet>12</a><span class="kw">impl </span>Mean {
+<a href=#13 id=13 data-nosnippet>13</a>    <span class="kw">pub fn </span>new(input_shape: Vec&lt;usize&gt;) -&gt; <span class="self">Self </span>{
+<a href=#14 id=14 data-nosnippet>14</a>        Mean { input_shape }
+<a href=#15 id=15 data-nosnippet>15</a>    }
+<a href=#16 id=16 data-nosnippet>16</a>}
+<a href=#17 id=17 data-nosnippet>17</a>
+<a href=#18 id=18 data-nosnippet>18</a><span class="kw">impl </span>Op <span class="kw">for </span>Mean {
+<a href=#19 id=19 data-nosnippet>19</a>    <span class="doccomment">/// Computes the mean of a tensor.
+<a href=#20 id=20 data-nosnippet>20</a>    </span><span class="kw">fn </span>forward(<span class="kw-2">&amp;</span><span class="self">self</span>, inputs: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>Tensor]) -&gt; Tensor {
+<a href=#21 id=21 data-nosnippet>21</a>        <span class="kw">if </span>inputs.len() != <span class="number">1 </span>{
+<a href=#22 id=22 data-nosnippet>22</a>            <span class="macro">panic!</span>(<span class="string">"Mean operation takes exactly one input."</span>);
+<a href=#23 id=23 data-nosnippet>23</a>        }
+<a href=#24 id=24 data-nosnippet>24</a>        <span class="kw">let </span>input = <span class="kw-2">&amp;</span>inputs[<span class="number">0</span>];
+<a href=#25 id=25 data-nosnippet>25</a>        <span class="kw">let </span>data = <span class="kw-2">&amp;</span>input.<span class="number">0</span>.borrow().data;
+<a href=#26 id=26 data-nosnippet>26</a>
+<a href=#27 id=27 data-nosnippet>27</a>        <span class="comment">// Calculate the mean. ndarray's mean() returns Option&lt;f32&gt;.
+<a href=#28 id=28 data-nosnippet>28</a>        </span><span class="kw">let </span>mean_val = data
+<a href=#29 id=29 data-nosnippet>29</a>            .mean()
+<a href=#30 id=30 data-nosnippet>30</a>            .expect(<span class="string">"Cannot compute mean of an empty tensor."</span>);
+<a href=#31 id=31 data-nosnippet>31</a>
+<a href=#32 id=32 data-nosnippet>32</a>        <span class="comment">// Create a true scalar (0-dim) tensor
+<a href=#33 id=33 data-nosnippet>33</a>        </span><span class="kw">let </span>result_data = Array::from_elem(IxDyn(<span class="kw-2">&amp;</span>[]), mean_val).into_dyn();
+<a href=#34 id=34 data-nosnippet>34</a>        <span class="kw">let </span>result = Tensor::new(result_data);
+<a href=#35 id=35 data-nosnippet>35</a>
+<a href=#36 id=36 data-nosnippet>36</a>        <span class="comment">// Set up the computation graph for backpropagation.
+<a href=#37 id=37 data-nosnippet>37</a>        </span><span class="kw">if </span>input.<span class="number">0</span>.borrow().requires_grad {
+<a href=#38 id=38 data-nosnippet>38</a>            <span class="comment">// For a scalar tensor, we need a scalar gradient
+<a href=#39 id=39 data-nosnippet>39</a>            </span>result.<span class="number">0</span>.borrow_mut().grad = <span class="prelude-val">Some</span>(ArrayD::from_elem(IxDyn(<span class="kw-2">&amp;</span>[]), <span class="number">1.0</span>));
+<a href=#40 id=40 data-nosnippet>40</a>            <span class="kw">let </span>op = Mean::new(input.shape());
+<a href=#41 id=41 data-nosnippet>41</a>            result.<span class="number">0</span>.borrow_mut().set_creator(Rc::new(op));
+<a href=#42 id=42 data-nosnippet>42</a>            result.<span class="number">0</span>.borrow_mut().add_parent(input);
+<a href=#43 id=43 data-nosnippet>43</a>            result.<span class="number">0</span>.borrow_mut().requires_grad = <span class="bool-val">true</span>;
+<a href=#44 id=44 data-nosnippet>44</a>        } <span class="kw">else </span>{
+<a href=#45 id=45 data-nosnippet>45</a>            <span class="comment">// Explicitly set requires_grad to false if input doesn't require grad
+<a href=#46 id=46 data-nosnippet>46</a>            </span>result.<span class="number">0</span>.borrow_mut().requires_grad = <span class="bool-val">false</span>;
+<a href=#47 id=47 data-nosnippet>47</a>        }
+<a href=#48 id=48 data-nosnippet>48</a>        result
+<a href=#49 id=49 data-nosnippet>49</a>    }
+<a href=#50 id=50 data-nosnippet>50</a>
+<a href=#51 id=51 data-nosnippet>51</a>    <span class="doccomment">/// Computes the gradient of the mean operation.
+<a href=#52 id=52 data-nosnippet>52</a>    </span><span class="kw">fn </span>backward(<span class="kw-2">&amp;</span><span class="self">self</span>, parent: <span class="kw-2">&amp;</span>Tensor) -&gt; Vec&lt;ArrayD&lt;f32&gt;&gt; {
+<a href=#53 id=53 data-nosnippet>53</a>        <span class="comment">// The gradient from the output tensor (which is the parent in the graph)
+<a href=#54 id=54 data-nosnippet>54</a>        </span><span class="kw">let </span>grad_output = parent
+<a href=#55 id=55 data-nosnippet>55</a>            .<span class="number">0
+<a href=#56 id=56 data-nosnippet>56</a>            </span>.borrow()
+<a href=#57 id=57 data-nosnippet>57</a>            .grad
+<a href=#58 id=58 data-nosnippet>58</a>            .as_ref()
+<a href=#59 id=59 data-nosnippet>59</a>            .expect(<span class="string">"Gradient not found in backward pass"</span>)
+<a href=#60 id=60 data-nosnippet>60</a>            .clone();
+<a href=#61 id=61 data-nosnippet>61</a>
+<a href=#62 id=62 data-nosnippet>62</a>        <span class="kw">let </span>grad_output_scalar = grad_output.iter().next().cloned().unwrap_or(<span class="number">1.0</span>);
+<a href=#63 id=63 data-nosnippet>63</a>
+<a href=#64 id=64 data-nosnippet>64</a>        <span class="comment">// The number of elements in the original input tensor.
+<a href=#65 id=65 data-nosnippet>65</a>        </span><span class="kw">let </span>num_elements = <span class="self">self</span>.input_shape.iter().product::&lt;usize&gt;() <span class="kw">as </span>f32;
+<a href=#66 id=66 data-nosnippet>66</a>        <span class="kw">if </span>num_elements == <span class="number">0.0 </span>{
+<a href=#67 id=67 data-nosnippet>67</a>            <span class="kw">return </span><span class="macro">vec!</span>[ArrayD::zeros(IxDyn(<span class="kw-2">&amp;</span><span class="self">self</span>.input_shape))];
+<a href=#68 id=68 data-nosnippet>68</a>        }
+<a href=#69 id=69 data-nosnippet>69</a>
+<a href=#70 id=70 data-nosnippet>70</a>        <span class="comment">// The gradient for each element of the input is grad_output / N.
+<a href=#71 id=71 data-nosnippet>71</a>        </span><span class="kw">let </span>grad_val = grad_output_scalar / num_elements;
+<a href=#72 id=72 data-nosnippet>72</a>
+<a href=#73 id=73 data-nosnippet>73</a>        <span class="comment">// Create the gradient array for the input, with the same shape as the original input.
+<a href=#74 id=74 data-nosnippet>74</a>        </span><span class="kw">let </span>grad_input = ArrayD::from_elem(IxDyn(<span class="kw-2">&amp;</span><span class="self">self</span>.input_shape), grad_val);
+<a href=#75 id=75 data-nosnippet>75</a>
+<a href=#76 id=76 data-nosnippet>76</a>        <span class="macro">vec!</span>[grad_input]
+<a href=#77 id=77 data-nosnippet>77</a>    }
+<a href=#78 id=78 data-nosnippet>78</a>}
+<a href=#79 id=79 data-nosnippet>79</a>
+<a href=#80 id=80 data-nosnippet>80</a><span class="doccomment">/// Functional interface for the mean operation.
+<a href=#81 id=81 data-nosnippet>81</a></span><span class="kw">pub fn </span>mean(tensor: <span class="kw-2">&amp;</span>Tensor) -&gt; Tensor {
+<a href=#82 id=82 data-nosnippet>82</a>    <span class="kw">let </span>op = Mean::new(tensor.shape());
+<a href=#83 id=83 data-nosnippet>83</a>    op.forward(<span class="kw-2">&amp;</span>[tensor])
+<a href=#84 id=84 data-nosnippet>84</a>}
+<a href=#85 id=85 data-nosnippet>85</a>
+<a href=#86 id=86 data-nosnippet>86</a><span class="kw">impl </span>Tensor {
+<a href=#87 id=87 data-nosnippet>87</a>    <span class="doccomment">/// Computes the mean of the tensor.
+<a href=#88 id=88 data-nosnippet>88</a>    </span><span class="kw">pub fn </span>mean(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Tensor {
+<a href=#89 id=89 data-nosnippet>89</a>        mean(<span class="self">self</span>)
+<a href=#90 id=90 data-nosnippet>90</a>    }
+<a href=#91 id=91 data-nosnippet>91</a>}</code></pre></div></section></main></body></html>

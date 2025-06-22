@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["add","matmul","mean","mul","relu"],"trait":["Op"]};

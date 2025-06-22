@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["autograd","functional","nn","ops","optimizer","tensor","utils"]};
