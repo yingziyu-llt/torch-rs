@@ -40,7 +40,7 @@ jobs:
       - name: Generate Docs
         run: |
           cargo doc --no-deps
-          echo '<meta http-equiv="refresh" content="0; url=./torch-rs/index.html" />' > target/doc/index.html
+          echo '<meta http-equiv="refresh" content="0; url=./torch_rs/index.html" />' > target/doc/index.html
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
