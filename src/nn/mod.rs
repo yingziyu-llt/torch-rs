@@ -1,4 +1,6 @@
 pub mod linear;
+pub mod relu;
+pub mod sequential;
 
 use crate::tensor::Tensor;
 use std::fmt::Debug;

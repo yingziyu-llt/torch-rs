@@ -1,9 +1,9 @@
 use super::Op;
 use crate::tensor::Tensor;
-use ndarray::{ArrayD, Axis, Ix2, Ix3, IxDyn};
 use core::panic;
-use std::rc::Rc;
+use ndarray::{ArrayD, Axis, Ix2, Ix3, IxDyn};
 use ndarray_einsum::tensordot;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct MatMul {

@@ -1,5 +1,5 @@
-use crate::tensor::Tensor;
 use crate::optimizer::Optimizer;
+use crate::tensor::Tensor;
 
 #[derive(Debug)]
 pub struct SGD {
@@ -13,12 +13,20 @@ impl SGD {
         println!("Parameters: {:?}", params);
         SGD { params, lr }
     }
+    pub fn set_lr(&mut self, lr: f32) {
+        self.lr = lr;
+    }
 }
 
-impl Optimizer for SGD {    
+impl Optimizer for SGD {
     fn step(&mut self) {
         for param in &mut self.params {
             let grad = param.0.borrow().grad.clone().expect("Gradient not found");
+            assert!(
+                grad.shape() == param.0.borrow().data.shape(),
+                "Gradient shape mismatch! {:?}",
+                param
+            );
             param.0.borrow_mut().data -= &((self.lr) * grad);
         }
     }

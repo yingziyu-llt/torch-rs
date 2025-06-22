@@ -25,7 +25,9 @@ impl Op for Mean {
         let data = &input.0.borrow().data;
 
         // Calculate the mean. ndarray's mean() returns Option<f32>.
-        let mean_val = data.mean().expect("Cannot compute mean of an empty tensor.");
+        let mean_val = data
+            .mean()
+            .expect("Cannot compute mean of an empty tensor.");
 
         // Create a true scalar (0-dim) tensor
         let result_data = Array::from_elem(IxDyn(&[]), mean_val).into_dyn();
@@ -49,8 +51,14 @@ impl Op for Mean {
     /// Computes the gradient of the mean operation.
     fn backward(&self, parent: &Tensor) -> Vec<ArrayD<f32>> {
         // The gradient from the output tensor (which is the parent in the graph)
-        let grad_output = parent.0.borrow().grad.as_ref().expect("Gradient not found in backward pass").clone();
-        
+        let grad_output = parent
+            .0
+            .borrow()
+            .grad
+            .as_ref()
+            .expect("Gradient not found in backward pass")
+            .clone();
+
         let grad_output_scalar = grad_output.iter().next().cloned().unwrap_or(1.0);
 
         // The number of elements in the original input tensor.

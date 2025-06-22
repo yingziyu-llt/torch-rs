@@ -15,6 +15,11 @@ use std::ops::{Add, Mul};
 pub fn mse_loss(prediction: &Tensor, target: &Tensor) -> Tensor {
     let diff = prediction + &((-1.0 as f32) * target);
     let squared_diff = &diff * &diff;
-    println!("Squared Difference: {:?}", squared_diff);
+    // println!("Squared Difference: {:?}", squared_diff);
     squared_diff.mean()
+}
+
+pub fn relu(input: &Tensor) -> Tensor {
+    let data = input.0.borrow().data.mapv(|x| x.max(0.0)).into_dyn();
+    Tensor::new(data).requires_grad(input.0.borrow().requires_grad)
 }

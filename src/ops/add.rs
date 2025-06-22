@@ -15,27 +15,30 @@ impl AddOp {
             input_shapes: vec![shape1, shape2],
         }
     }
-    
+
     // 获取广播后的形状
     fn get_broadcasted_shape(shape1: &[usize], shape2: &[usize]) -> Vec<usize> {
         let len1 = shape1.len();
         let len2 = shape2.len();
         let max_len = std::cmp::max(len1, len2);
-        
+
         let mut result = Vec::with_capacity(max_len);
-        
+
         // 从尾部开始，依次比较对齐的维度
         for i in 0..max_len {
             let dim1 = if i < len1 { shape1[len1 - 1 - i] } else { 1 };
             let dim2 = if i < len2 { shape2[len2 - 1 - i] } else { 1 };
-            
+
             if dim1 != 1 && dim2 != 1 && dim1 != dim2 {
-                panic!("Incompatible dimensions for broadcasting: {} and {}", dim1, dim2);
+                panic!(
+                    "Incompatible dimensions for broadcasting: {} and {}",
+                    dim1, dim2
+                );
             }
-            
+
             result.push(std::cmp::max(dim1, dim2));
         }
-        
+
         result.reverse();
         result
     }
@@ -50,7 +53,7 @@ impl Op for AddOp {
 
         let a = &inputs[0].0.borrow().data;
         let b = &inputs[1].0.borrow().data;
-        
+
         // 使用ndarray的广播机制处理张量加法
         let result_data = match (a.broadcast(b.shape()), b.broadcast(a.shape())) {
             (Some(a_broadcast), _) => &a_broadcast + b,
@@ -60,19 +63,21 @@ impl Op for AddOp {
                 let shape1 = a.shape();
                 let shape2 = b.shape();
                 let output_shape = Self::get_broadcasted_shape(shape1, shape2);
-                
-                let a_broadcast = a.broadcast(IxDyn(&output_shape))
+
+                let a_broadcast = a
+                    .broadcast(IxDyn(&output_shape))
                     .expect("Failed to broadcast first tensor");
-                let b_broadcast = b.broadcast(IxDyn(&output_shape))
+                let b_broadcast = b
+                    .broadcast(IxDyn(&output_shape))
                     .expect("Failed to broadcast second tensor");
-                
+
                 &a_broadcast.to_owned() + &b_broadcast
             }
         };
 
         // 创建一个新的op实例，存储输入形状供反向传播使用
         let op = AddOp::new(a.shape().to_vec(), b.shape().to_vec());
-        
+
         // 创建新的张量作为输出
         let output = Tensor::new(result_data);
         {
@@ -81,23 +86,30 @@ impl Op for AddOp {
 
             // 添加需要梯度的父节点
             if inputs[0].0.borrow().requires_grad {
-            output_data.add_parent(inputs[0]);
+                output_data.add_parent(inputs[0]);
             }
-            
+
             if inputs[1].0.borrow().requires_grad {
-            output_data.add_parent(inputs[1]);
+                output_data.add_parent(inputs[1]);
             }
-            
+
             // 如果任一输入需要梯度，则输出也需要梯度
-            output_data.requires_grad = inputs[0].0.borrow().requires_grad || inputs[1].0.borrow().requires_grad;
+            output_data.requires_grad =
+                inputs[0].0.borrow().requires_grad || inputs[1].0.borrow().requires_grad;
         }
-        
+
         output
     }
 
     /// 反向传播：计算梯度并传播到父节点
     fn backward(&self, parent: &Tensor) -> Vec<ArrayD<f32>> {
-        let grad = parent.0.borrow().grad.as_ref().expect("Gradient should not be None").clone();
+        let grad = parent
+            .0
+            .borrow()
+            .grad
+            .as_ref()
+            .expect("Gradient should not be None")
+            .clone();
         let mut grads = Vec::with_capacity(2);
         // 对于每个输入形状，处理梯度的反向广播
         for shape in &self.input_shapes {
@@ -134,8 +146,8 @@ impl<'a, 'b> Add<&'a Tensor> for &'b Tensor {
     fn add(self, other: &'a Tensor) -> Tensor {
         // 直接使用输入形状创建op
         let op = AddOp::new(
-            self.0.borrow().data.shape().to_vec(), 
-            other.0.borrow().data.shape().to_vec()
+            self.0.borrow().data.shape().to_vec(),
+            other.0.borrow().data.shape().to_vec(),
         );
         op.forward(&[self, other])
     }

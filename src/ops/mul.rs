@@ -1,8 +1,8 @@
 use crate::ops::Op;
 use crate::tensor::Tensor;
-use std::{process::Output, rc::Rc};
 use ndarray::{ArrayD, Axis, IxDyn};
 use std::ops::Mul;
+use std::{process::Output, rc::Rc};
 
 #[derive(Debug)]
 pub struct Multiply {
@@ -24,21 +24,24 @@ impl Multiply {
         let len1 = shape1.len();
         let len2 = shape2.len();
         let max_len = std::cmp::max(len1, len2);
-        
+
         let mut result = Vec::with_capacity(max_len);
-        
+
         // 从尾部开始，依次比较对齐的维度
         for i in 0..max_len {
             let dim1 = if i < len1 { shape1[len1 - 1 - i] } else { 1 };
             let dim2 = if i < len2 { shape2[len2 - 1 - i] } else { 1 };
-            
+
             if dim1 != 1 && dim2 != 1 && dim1 != dim2 {
-                panic!("Incompatible dimensions for broadcasting: {} and {}", dim1, dim2);
+                panic!(
+                    "Incompatible dimensions for broadcasting: {} and {}",
+                    dim1, dim2
+                );
             }
-            
+
             result.push(std::cmp::max(dim1, dim2));
         }
-        
+
         result.reverse();
         result
     }
@@ -48,7 +51,7 @@ impl Multiply {
     fn sum_to_shape(grad: &ArrayD<f32>, target_shape: &[usize]) -> ArrayD<f32> {
         let mut result = grad.clone();
         let grad_shape = grad.shape();
-        
+
         // 1. 处理维度数不同的情况 (对多余的前导维度求和)
         if target_shape.len() < grad_shape.len() {
             let axes_to_sum: Vec<usize> = (0..(grad_shape.len() - target_shape.len())).collect();
@@ -56,7 +59,7 @@ impl Multiply {
                 result = result.sum_axis(Axis(axis));
             }
         }
-        
+
         // 2. 处理被广播的维度 (size 1 -> size > 1)
         let mut sum_axes = Vec::new();
         let current_shape = result.shape(); // 获取求和后的新形状
@@ -66,18 +69,18 @@ impl Multiply {
                 sum_axes.push(i);
             }
         }
-        
+
         // 从大到小排序轴，以避免求和后索引变化
         sum_axes.sort_unstable_by(|a, b| b.cmp(a));
         for axis in sum_axes {
             result = result.sum_axis(Axis(axis));
         }
-        
+
         // 3. 确保形状完全匹配 (恢复被求和掉的 size 1 的维度)
         if result.shape() != target_shape {
             result = result.into_shape(IxDyn(target_shape)).unwrap();
         }
-        
+
         result
     }
 }
@@ -97,10 +100,16 @@ impl Op for Multiply {
                 let shape2 = b.shape();
                 let broadcast_shape = Self::get_broadcasted_shape(shape1, shape2);
                 let a_broadcasted = a.broadcast(IxDyn(&broadcast_shape)).unwrap_or_else(|| {
-                    panic!("Cannot broadcast tensor with shape {:?} to {:?}", shape1, broadcast_shape)
+                    panic!(
+                        "Cannot broadcast tensor with shape {:?} to {:?}",
+                        shape1, broadcast_shape
+                    )
                 });
                 let b_broadcasted = b.broadcast(IxDyn(&broadcast_shape)).unwrap_or_else(|| {
-                    panic!("Cannot broadcast tensor with shape {:?} to {:?}", shape2, broadcast_shape)
+                    panic!(
+                        "Cannot broadcast tensor with shape {:?} to {:?}",
+                        shape2, broadcast_shape
+                    )
                 });
                 a_broadcasted.to_owned() * b_broadcasted.to_owned()
             }
@@ -112,16 +121,22 @@ impl Op for Multiply {
             b_data: Some(b.clone()),
         });
 
-
         let result_tensor = Tensor::new(result);
         result_tensor.0.borrow_mut().set_creator(op);
         result_tensor.0.borrow_mut().add_parent(&inputs[0]);
         result_tensor.0.borrow_mut().add_parent(&inputs[1]);
-        result_tensor.0.borrow_mut().requires_grad = inputs[0].0.borrow().requires_grad || inputs[1].0.borrow().requires_grad;
+        result_tensor.0.borrow_mut().requires_grad =
+            inputs[0].0.borrow().requires_grad || inputs[1].0.borrow().requires_grad;
         result_tensor
     }
     fn backward(&self, parent: &Tensor) -> Vec<ArrayD<f32>> {
-        let grad_output = parent.0.borrow().grad.as_ref().expect("Parent gradient is None").clone();
+        let grad_output = parent
+            .0
+            .borrow()
+            .grad
+            .as_ref()
+            .expect("Parent gradient is None")
+            .clone();
         let a_data = self.a_data.as_ref().expect("a_data is None in backward");
         let b_data = self.b_data.as_ref().expect("b_data is None in backward");
 
@@ -143,7 +158,7 @@ impl Op for Multiply {
     }
 }
 
-impl<'a,'b> Mul<&'a Tensor> for &'b Tensor {
+impl<'a, 'b> Mul<&'a Tensor> for &'b Tensor {
     type Output = Tensor;
 
     fn mul(self, other: &'a Tensor) -> Tensor {
@@ -162,7 +177,7 @@ impl<'a> Mul<f32> for &'a Tensor {
     }
 }
 
-impl <'a> Mul<&'a Tensor> for f32 {
+impl<'a> Mul<&'a Tensor> for f32 {
     type Output = Tensor;
 
     fn mul(self, tensor: &'a Tensor) -> Tensor {
@@ -170,7 +185,7 @@ impl <'a> Mul<&'a Tensor> for f32 {
     }
 }
 
-impl <'a> Mul<f64> for &'a Tensor {
+impl<'a> Mul<f64> for &'a Tensor {
     type Output = Tensor;
 
     fn mul(self, scalar: f64) -> Tensor {
@@ -179,7 +194,7 @@ impl <'a> Mul<f64> for &'a Tensor {
     }
 }
 
-impl <'a> Mul<&'a Tensor> for f64 {
+impl<'a> Mul<&'a Tensor> for f64 {
     type Output = Tensor;
 
     fn mul(self, tensor: &'a Tensor) -> Tensor {

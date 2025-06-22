@@ -33,6 +33,7 @@ impl Tensor {
         // 3. 反向遍历拓扑序，执行梯度传播
         for tensor in topo_order.into_iter().rev() {
             let creator = tensor.0.borrow().creator.clone();
+            //println!("Processing tensor: {:?}", tensor);
             if let Some(op) = creator {
                 let grads = op.backward(&tensor);
                 let parents = tensor.0.borrow().parents.clone();

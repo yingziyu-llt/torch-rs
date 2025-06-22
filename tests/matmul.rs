@@ -67,13 +67,13 @@ fn test_tensor_3d_matmul_grad() {
 
 #[test]
 fn test_vectors_matmul() {
-    let a = Tensor::new(array![[1.0,2.0,3.0]].into_dyn()).requires_grad(true);
+    let a = Tensor::new(array![[1.0,2.0,3.0],[1.0,2.0,3.0]].into_dyn()).requires_grad(true);
     let b = Tensor::randn(&[3, 4]).requires_grad(true);
-    let c = Tensor::randn(&[4]).requires_grad(true);
+    let c = Tensor::randn(&[2,4]).requires_grad(true);
     let result = &matmul(&a, &b) + &c;
     // 预期结果: A:[1,3], B:[3,4]
     // Out:[1,4]
-    let expected_shape = vec![1, 4];
+    let expected_shape = vec![2, 4];
     assert_eq!(result.shape(), expected_shape);
     result.backward();
     println!("a:{:?}, b:{:?}, c:{:?}",
