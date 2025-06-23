@@ -1,7 +1,7 @@
 use crate::ops::Op;
 use ndarray::{Array, ArrayD, Axis, IxDyn};
-use ndarray_rand::rand_distr::StandardNormal;
 use ndarray_rand::RandomExt;
+use ndarray_rand::rand_distr::StandardNormal;
 use std::cell::RefCell;
 use std::fmt::{self, Debug};
 use std::rc::Rc;
@@ -151,16 +151,11 @@ impl Tensor {
         }
 
         // 先clone所有数据，避免生命周期问题
-        let arrays: Vec<_> = tensors.iter()
-            .map(|t| t.0.borrow().data.clone())
-            .collect();
+        let arrays: Vec<_> = tensors.iter().map(|t| t.0.borrow().data.clone()).collect();
 
-        let views: Vec<_> = arrays.iter()
-            .map(|a| a.view())
-            .collect();
+        let views: Vec<_> = arrays.iter().map(|a| a.view()).collect();
 
-        let stacked_data = ndarray::stack(Axis(0), &views)
-            .map_err(|_| "无法堆叠张量")?;
+        let stacked_data = ndarray::stack(Axis(0), &views).map_err(|_| "无法堆叠张量")?;
         Ok(Tensor::new(stacked_data))
     }
 

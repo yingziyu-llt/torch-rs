@@ -17,7 +17,7 @@ impl Module for Sequential {
         let mut output = input.clone();
         for layer in &self.layers {
             output = layer.forward(&output);
-            println!("output after layer {:?}: {:?}", layer, output);
+            // println!("output after layer {:?}: {:?}", layer, output);
         }
         output
     }

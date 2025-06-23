@@ -34,9 +34,7 @@ fn test_tensor_3d_matmul() {
         ]
         .into_dyn(),
     );
-    let b = Tensor::new(
-        array![[1., 2., 3., 4.], [5., 6., 7., 8.], [9., 10., 11., 12.]].into_dyn(),
-    );
+    let b = Tensor::new(array![[1., 2., 3., 4.], [5., 6., 7., 8.], [9., 10., 11., 12.]].into_dyn());
     let result = matmul(&a, &b);
     // 预期结果形状: [2, 2, 4]
     assert_eq!(result.shape(), vec![2, 2, 4]);
@@ -67,17 +65,14 @@ fn test_tensor_3d_matmul_grad() {
 
 #[test]
 fn test_vectors_matmul() {
-    let a = Tensor::new(array![[1.0,2.0,3.0],[1.0,2.0,3.0]].into_dyn()).require_grad(true);
+    let a = Tensor::new(array![[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]].into_dyn()).require_grad(true);
     let b = Tensor::randn(&[3, 4]).require_grad(true);
-    let c = Tensor::randn(&[2,4]).require_grad(true);
+    let c = Tensor::randn(&[2, 4]).require_grad(true);
     let result = &matmul(&a, &b) + &c;
     // 预期结果: A:[1,3], B:[3,4]
     // Out:[1,4]
     let expected_shape = vec![2, 4];
     assert_eq!(result.shape(), expected_shape);
     result.backward();
-    println!("a:{:?}, b:{:?}, c:{:?}",
-             a,
-             b,
-             c);
+    println!("a:{:?}, b:{:?}, c:{:?}", a, b, c);
 }

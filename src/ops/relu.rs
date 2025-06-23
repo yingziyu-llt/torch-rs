@@ -18,9 +18,11 @@ impl Op for ReLU {
             .require_grad(input.0.borrow().requires_grad);
         let op = ReLU::new();
         res.0.borrow_mut().set_creator(Rc::new(op));
-        res.0.borrow_mut().add_parent(input);
+        if input.0.borrow().requires_grad {
+            // 如果输入需要梯度，则将当前操作添加为父节点
+            res.0.borrow_mut().add_parent(input);
+        }
         res
-
     }
 
     fn backward(&self, parent: &Tensor) -> Vec<ndarray::ArrayD<f32>> {

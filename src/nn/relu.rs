@@ -1,6 +1,6 @@
+use crate::functional;
 use crate::nn::Module;
 use crate::tensor::Tensor;
-use crate::functional;
 
 #[derive(Debug)]
 pub struct ReLU;

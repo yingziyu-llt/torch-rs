@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use torch_rs::tensor::Tensor;    
     use ndarray::array;
+    use torch_rs::tensor::Tensor;
 
     #[test]
     fn test_add_backward() {
@@ -14,8 +14,14 @@ mod tests {
         let a_grad = a.0.borrow().grad.clone().unwrap();
         let b_grad = b.0.borrow().grad.clone().unwrap();
         // mean对每个元素的梯度都是1/3
-        assert_eq!(a_grad, ndarray::Array::from_elem(a.shape(), 1.0/3.0).into_dyn());
-        assert_eq!(b_grad, ndarray::Array::from_elem(b.shape(), 1.0/3.0).into_dyn());
+        assert_eq!(
+            a_grad,
+            ndarray::Array::from_elem(a.shape(), 1.0 / 3.0).into_dyn()
+        );
+        assert_eq!(
+            b_grad,
+            ndarray::Array::from_elem(b.shape(), 1.0 / 3.0).into_dyn()
+        );
     }
 
     #[test]
@@ -29,8 +35,8 @@ mod tests {
         let a_grad = a.0.borrow().grad.clone().unwrap();
         let b_grad = b.0.borrow().grad.clone().unwrap();
         // mean对每个元素的梯度都是1/3，乘法链式法则
-        assert_eq!(a_grad, b.data() * (1.0/3.0));
-        assert_eq!(b_grad, a.data() * (1.0/3.0));
+        assert_eq!(a_grad, b.data() * (1.0 / 3.0));
+        assert_eq!(b_grad, a.data() * (1.0 / 3.0));
     }
     use torch_rs::ops::matmul::matmul;
 
@@ -69,7 +75,7 @@ mod tests {
     #[test]
     fn test_linear() {
         let input = Tensor::new(array![[1.0, 2.0, 3.0]].into_dyn()).require_grad(true);
-        let weight = Tensor::new(array![[0.5],[0.5],[0.5]].into_dyn()).require_grad(true);
+        let weight = Tensor::new(array![[0.5], [0.5], [0.5]].into_dyn()).require_grad(true);
         let bias = Tensor::new(array![0.0].into_dyn()).require_grad(true);
         let output = &matmul(&input, &weight) + &bias;
         let loss = output.mean();

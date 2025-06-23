@@ -1,13 +1,13 @@
-use torch_rs::nn::linear::Linear;
 use torch_rs::functional::mse_loss;
+use torch_rs::nn::linear::Linear;
 
 #[cfg(test)]
 mod tests {
     use std::vec;
 
+    use ndarray::array;
     use torch_rs::nn::Module;
     use torch_rs::tensor::Tensor;
-    use ndarray::array;
 
     use super::*;
 
@@ -21,7 +21,7 @@ mod tests {
         let input = Tensor::ones(vec![1, 5].as_slice()).require_grad(true);
         let y = linear.forward(&input);
         println!("input: {:?}", input);
-        assert_eq!(y.shape(), &[1,5]);
+        assert_eq!(y.shape(), &[1, 5]);
         let target = Tensor::new(array![[1.0, 2.0, 3.0, 4.0, 5.0]].into_dyn());
         let loss = mse_loss(&y, &target);
         println!("loss: {:?}", loss);
@@ -43,7 +43,14 @@ mod tests {
         let x = torch_rs::tensor::Tensor::ones(vec![1, 10].as_slice()).require_grad(true);
         let y = linear.forward(&x);
         assert_eq!(y.shape(), &[1, 5]);
-        let target = Tensor::new(array![[1.0, 2.0, 3.0, 4.0, 5.0], [1.0, 2.0, 3.0, 4.0, 5.0], [1.0, 2.0, 3.0, 4.0, 5.0]].into_dyn());
+        let target = Tensor::new(
+            array![
+                [1.0, 2.0, 3.0, 4.0, 5.0],
+                [1.0, 2.0, 3.0, 4.0, 5.0],
+                [1.0, 2.0, 3.0, 4.0, 5.0]
+            ]
+            .into_dyn(),
+        );
         let loss = mse_loss(&y, &target);
         println!("loss: {:?}", loss);
         loss.backward();

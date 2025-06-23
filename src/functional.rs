@@ -1,4 +1,6 @@
+use crate::ops::Op;
 use crate::tensor::Tensor;
+use std::rc::Rc;
 
 /// 计算预测值和目标值之间的均方误差（Mean Squared Error）。
 ///
@@ -23,6 +25,7 @@ pub fn mse_loss(prediction: &Tensor, target: &Tensor) -> Tensor {
 /// # 返回
 /// 应用ReLU后的张量。
 pub fn relu(input: &Tensor) -> Tensor {
-    let data = input.0.borrow().data.mapv(|x| x.max(0.0)).into_dyn();
-    Tensor::new(data).require_grad(input.0.borrow().requires_grad)
+    let op = Rc::new(crate::ops::relu::ReLU::new());
+    let res = op.forward(&[input]);
+    res
 }

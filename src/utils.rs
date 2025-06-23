@@ -89,10 +89,13 @@ impl<'a, D: Dataset> Iterator for DataLoader<'a, D> {
             batch_data.push(data);
             batch_targets.push(target);
         }
-        let batch_data = Tensor::stack(&batch_data.as_slice()).unwrap().require_grad(false);
-        let batch_targets = Tensor::stack(&batch_targets.as_slice()).unwrap().require_grad(false);
+        let batch_data = Tensor::stack(&batch_data.as_slice())
+            .unwrap()
+            .require_grad(false);
+        let batch_targets = Tensor::stack(&batch_targets.as_slice())
+            .unwrap()
+            .require_grad(false);
         self.idx = end;
         Some((batch_data, batch_targets))
     }
 }
-
