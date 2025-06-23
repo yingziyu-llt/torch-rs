@@ -18,7 +18,7 @@ fn main() {
         ]
         .into_dyn(),
     )
-    .requires_grad(true);
+    .require_grad(true);
     let b = Tensor::new(array![[2.0], [4.01], [5.99], [8.01], [10.005], [12.0]].into_dyn());
     let linear_layer = Linear::new(2, 1);
     let mut optimizer = SGD::new(linear_layer.parameters(), 0.01);
@@ -26,7 +26,7 @@ fn main() {
 
     for i in 0..100 {
         let output = linear_layer.forward(&a);
-        let loss = F::mse_loss(&output, &b);
+        let loss = functional::mse_loss(&output, &b);
         println!("Epoch {}: Loss = {:?}", i, loss);
         println!("Output: {:?}", output);
 
